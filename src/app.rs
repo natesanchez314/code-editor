@@ -12,7 +12,7 @@ impl Default for MyApp {
 	fn default() -> Self {
 		Self {
 			label: "Hello World!".to_owned(),
-			terminal_in: "Terminal in".to_owned(),
+			terminal_in: "Terminal stuff".to_owned(),
 			terminal_out: "Terminal out".to_owned(),
 			value: 2.7,
 		}
@@ -49,18 +49,23 @@ impl eframe::App for MyApp {
 			});
 		});
 		egui::TopBottomPanel::bottom("bottom_panel").resizable(true).show(ctx, |ui| {
-			ui.vertical_centered_justified(|ui| {
-				egui::ScrollArea::vertical().show(ui, |ui| {
-					ui.add(
-						egui::TextEdit::multiline(&mut self.terminal_out),
-					);
+			ui.collapsing("Terminal", |ui| {
+				ui.available_height();
+				ui.vertical_centered_justified(|ui| {
+					//egui::ScrollArea::vertical().show(ui, |ui| {
+						ui.add(
+							egui::TextEdit::multiline(&mut self.terminal_out)
+								.cursor_at_end(true)
+								.desired_rows(8),
+						);
+					//});
+				//ui.add(
+				//	egui::TextEdit::singleline(&mut self.terminal_in),
+				//);
 				});
-				ui.add(
-					egui::TextEdit::singleline(&mut self.terminal_in),
-				);
 			});
 		});
-		egui::SidePanel::left("test").min_width(1.0).show(ctx, |ui| {
+		egui::SidePanel::left("test").show(ctx, |ui| {
 			ui.heading("Folders");
 			egui::ScrollArea::both().stick_to_bottom(true).auto_shrink(false).show(ui, |ui| {
 				ui.collapsing("Example Folder", |ui| {
@@ -71,6 +76,16 @@ impl eframe::App for MyApp {
 				});
 			});
 		});
+
+		let mut theme = egui_extras::syntax_highlighting::CodeTheme::from_memory(ctx);
+
+		let mut layouter = |ui: &egui::Ui, string: &str, wrap_width: f32| {
+            let mut layout_job =
+                egui_extras::syntax_highlighting::highlight(ui.ctx(), &theme, string, "rs".into());
+            layout_job.wrap.max_width = wrap_width;
+            ui.fonts(|f| f.layout_job(layout_job))
+        };
+
 		egui::CentralPanel::default().show(ctx, |ui| {
 			ui.horizontal_top(|ui| {
 				ui.available_size();
@@ -80,7 +95,9 @@ impl eframe::App for MyApp {
 					});
 					ui.add_sized(
 					ui.available_size(),
-						egui::TextEdit::multiline(&mut self.label).code_editor(),
+						egui::TextEdit::multiline(&mut self.label)
+							.code_editor()
+							.layouter(&mut layouter),
 					);
 				});
 			});	
