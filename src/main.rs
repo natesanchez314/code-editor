@@ -1,4 +1,5 @@
 mod app;
+mod file_handler;
 pub use app::MyApp;
 
 use eframe::egui;

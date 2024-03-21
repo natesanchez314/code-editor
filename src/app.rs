@@ -1,9 +1,17 @@
+use std::{collections::HashMap, fs::File};
+
+use egui::Widget;
+
+use crate::file_handler::{open_dir, open_file};
+
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)]
 pub struct MyApp {
 	label: String,
 	terminal_out: String,
 	terminal_in: String,
+	working_dir: String,
+	open_files: Vec<String>,
 	#[serde(skip)]
 	value: f32
 }
@@ -14,6 +22,8 @@ impl Default for MyApp {
 			label: "Hello World!".to_owned(),
 			terminal_in: "Terminal stuff".to_owned(),
 			terminal_out: "Terminal out".to_owned(),
+			working_dir: "/mnt/f80962e1-0834-440c-9374-0dd1dc213694/GitHub/shrimp-lang".to_owned(),
+			open_files: Vec::new(),
 			value: 2.7,
 		}
 	}
@@ -37,8 +47,17 @@ impl eframe::App for MyApp {
 		egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
 			egui::menu::bar(ui, |ui| {
 				ui.menu_button("File", |ui| {
-					if ui.button("Open File...").clicked() {}
-					if ui.button("Open Folder...").clicked() {}
+					if ui.button("Open File...").clicked() {
+						let file_name = "src/main.rs";
+						let data = open_file(file_name.to_owned());
+						//self.open_file_data.insert(file_name.to_owned(), data.clone());
+						self.label.clear();
+						self.label = data;
+					}
+					if ui.button("Open Folder...").clicked() {
+						let read_dir = open_dir(&self.working_dir);
+						println!("{:?}", read_dir);
+					}
 					if ui.button("Quit").clicked() {
 						ctx.send_viewport_cmd(egui::ViewportCommand::Close);
 					}
@@ -93,14 +112,33 @@ impl eframe::App for MyApp {
 					ui.horizontal(|ui| {
 						if ui.selectable_label(false, "Example File").clicked() {}	
 					});
-					ui.add_sized(
-					ui.available_size(),
-						egui::TextEdit::multiline(&mut self.label)
-							.code_editor()
-							.layouter(&mut layouter),
-					);
+					egui::ScrollArea::both().show(ui, |ui| {
+						ui.add_sized(
+						ui.available_size(),
+							egui::TextEdit::multiline(&mut self.label)
+								.code_editor()
+								.layouter(&mut layouter),
+						);
+					})
 				});
 			});	
 		});
 	}
 }
+
+// struct Dir {
+// 	dir_name: String,
+// 	sub_dirs: Vec<Dir>,
+// 	files: Vec<String>,
+// }
+
+// impl Dir {	
+// 	fn ui(self, ui: &mut egui::Ui) -> egui::CollaResponse {
+// 		ui.collapsing(self.dir_name, |ui| {
+// 			ui.collapsing("Example Subfolder", |ui| {
+// 				if ui.selectable_label(false, "Example File 1").clicked() {}	
+// 			});
+// 			if ui.selectable_label(false, "Example File 2").clicked() {}	
+// 		})
+// 	}
+// }
